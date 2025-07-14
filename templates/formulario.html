@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predicción de Supervivencia</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Iconos (opcional pero recomendado) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+        body {
+            background: linear-gradient(to right, #003973, #e5e5be);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .card-custom {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 40px 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 600px;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        h2 {
+            font-weight: 700;
+            color: #003973;
+            margin-bottom: 30px;
+        }
+
+        .form-label {
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background-color: #003973;
+            border: none;
+            font-weight: bold;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+            transform: scale(1.02);
+        }
+
+        #resultado {
+            font-size: 1.2rem;
+            margin-top: 20px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+
+    <script>
+        function predecirSupervivencia(event) {
+            event.preventDefault();
+
+            const age = document.getElementById('age').value;
+            const fare = document.getElementById('fare').value;
+            const sex = document.getElementById('sex').value;
+            const pclass = document.getElementById('pclass').value;
+            const embarked = document.getElementById('embarked').value;
+
+            fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `age=${age}&fare=${fare}&sex=${sex}&pclass=${pclass}&embarked=${embarked}`,
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const resultado = document.getElementById('resultado');
+                    if (data.error) {
+                        resultado.innerText = '⚠️ Error: ' + data.error;
+                        resultado.className = "text-danger";
+                    } else {
+                        resultado.innerText = data.sobrevive
+                            ? '🟢 ¡El pasajero probablemente sobreviviría!'
+                            : '🔴 El pasajero probablemente no sobreviviría.';
+                        resultado.className = data.sobrevive ? "text-success" : "text-danger";
+                    }
+                })
+                .catch(error => {
+                    const resultado = document.getElementById('resultado');
+                    resultado.innerText = '❌ Error en la solicitud.';
+                    resultado.className = "text-danger";
+                    console.error('Error:', error);
+                });
+        }
+    </script>
+</head>
+
+<body>
+    <div class="card-custom">
+        <h2 class="text-center"><i class="fa-solid fa-ship me-2"></i>Predicción Titanic</h2>
+
+        <form onsubmit="predecirSupervivencia(event)">
+            <div class="mb-3">
+                <label for="age" class="form-label">Edad del pasajero:</label>
+                <input type="number" id="age" name="age" step="any" class="form-control" placeholder="Ej. 25" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="fare" class="form-label">Tarifa pagada (Fare):</label>
+                <input type="number" id="fare" name="fare" step="any" class="form-control" placeholder="Ej. 50.5"
+                    required>
+            </div>
+
+            <div class="mb-3">
+                <label for="sex" class="form-label">Sexo:</label>
+                <select id="sex" name="sex" class="form-select" required>
+                    <option value="">Selecciona una opción</option>
+                    <option value="male">Hombre</option>
+                    <option value="female">Mujer</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="pclass" class="form-label">Clase del pasajero:</label>
+                <select id="pclass" name="pclass" class="form-select" required>
+                    <option value="">Selecciona una opción</option>
+                    <option value="1">Primera Clase</option>
+                    <option value="2">Segunda Clase</option>
+                    <option value="3">Tercera Clase</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="embarked" class="form-label">Puerto de embarque:</label>
+                <select id="embarked" name="embarked" class="form-select" required>
+                    <option value="">Selecciona un puerto</option>
+                    <option value="S">Southampton</option>
+                    <option value="C">Cherbourg</option>
+                    <option value="Q">Queenstown</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 mt-3">Predecir Supervivencia</button>
+        </form>
+
+        <div id="resultado" class="mt-4"></div>
+    </div>
+</body>
+
+</html>
